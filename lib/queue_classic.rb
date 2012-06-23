@@ -5,13 +5,29 @@ require "uri"
 $: << File.expand_path(__FILE__, "lib")
 
 require "queue_classic/okjson"
-require "queue_classic/conn"
+
+if RUBY_PLATFORM == "java"
+  require "queue_classic/jdbc_conn"
+else
+  require "queue_classic/pg_conn"
+end
+
 require "queue_classic/queries"
 require "queue_classic/queue"
 require "queue_classic/worker"
 require "queue_classic/setup"
 
 module QC
+  if RUBY_PLATFORM == "java"
+    def self.replace_params(query_string)
+      query_string.gsub(/\$\d/, "?")
+    end
+  else
+    def self.replace_params(query_string)
+      query_string
+    end
+  end
+  class Error < Exception; end
   # ENV["LOG_LEVEL"] is used in Scrolls
   Scrolls::Log.start
 

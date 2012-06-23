@@ -1,6 +1,9 @@
 require File.expand_path("../helper.rb", __FILE__)
+require 'rr'
 
 class QueueTest < QCTest
+  include RR::Adapters::TestUnit
+  extend RR::Adapters::RRMethods
 
   def test_enqueue
     QC.enqueue("Klass.method")
@@ -60,16 +63,28 @@ class QueueTest < QCTest
     queue = QC::Queue.new("queue_classic_jobs", false)
     queue.enqueue("Klass.method")
     assert_equal(1, queue.count)
-    connection = QC::Conn.connection
-    saved_method = connection.method(:exec)
-    def connection.exec(*args)
-      raise PGError
+
+    times_called = 0
+    if RUBY_PLATFORM == "java"
+      java_import java.sql.SQLException
+
+      stub(QC::Conn).run_prepared_statement do |statement|
+        if times_called == 0
+          times_called = times_called + 1
+          raise java.sql.SQLException.new("Test exception")
+        else
+          statement.execute
+        end
+      end
+    else
+      connection = QC::Conn.connection
+      stub(connection).exec {raise PGError}
     end
-    assert_raises(PG::Error) { queue.enqueue("Klass.other_method") }    
+    assert_raises(QC::Error) { queue.enqueue("Klass.other_method") }
     assert_equal(1, queue.count)
     queue.enqueue("Klass.other_method")
     assert_equal(2, queue.count)
-  rescue PG::Error
+  rescue QC::Error
     QC::Conn.disconnect
     assert false, "Expected to QC repair after connection error"
   end
