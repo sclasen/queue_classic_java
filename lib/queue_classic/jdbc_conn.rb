@@ -1,5 +1,5 @@
 require 'jdbc/postgres'
-
+require 'cgi'
 
 module QC
   module Conn
@@ -97,7 +97,12 @@ module QC
     end
 
     def connect
-      conn =  java.sql.DriverManager.getConnection("jdbc:#{env_db_url}")
+      url_params = CGI::parse(db_url.query || "")
+      props = java.util.Properties.new
+      props.setProperty("user", url_params["user"].empty? ? ENV["USER"] : url_params["user"].first)
+      props.setProperty("password", url_params["password"].empty? ? "" : url_params["password"].first)
+
+      conn = Java::OrgPostgresql::Driver.new.connect("jdbc:" + db_url.scheme + "://" + db_url.host + db_url.path, props)
       log(:level => :debug, :action => "establish_conn")
       if conn.is_closed
         log(:level => :error, :message => conn.error)
