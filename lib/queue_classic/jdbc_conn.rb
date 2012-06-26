@@ -101,8 +101,8 @@ module QC
       props = java.util.Properties.new
       props.setProperty("user", url_params["user"].empty? ? ENV["USER"] : url_params["user"].first)
       props.setProperty("password", url_params["password"].empty? ? "" : url_params["password"].first)
-
-      conn = Java::OrgPostgresql::Driver.new.connect("jdbc:" + db_url.scheme + "://" + db_url.host + db_url.path, props)
+      port_str = db_url.port ? ":" + db_url.port.to_s : ""
+      conn = Java::OrgPostgresql::Driver.new.connect("jdbc:" + db_url.scheme + "://" + db_url.host + port_str + db_url.path, props)
       log(:level => :debug, :action => "establish_conn")
       if conn.is_closed
         log(:level => :error, :message => conn.error)
