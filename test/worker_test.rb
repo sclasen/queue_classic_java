@@ -24,64 +24,72 @@ class TestWorker < QC::Worker
   end
 end
 
+
+
 class WorkerTest < QCTest
+
 
   def test_work
     QC.enqueue("TestObject.no_args")
     worker = TestWorker.new("default", 1, false, false, 1)
     assert_equal(1, QC.count)
     worker.work
+
+    sleep(2)
     assert_equal(0, QC.count)
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_failed_job
     QC.enqueue("TestObject.not_a_method")
     worker = TestWorker.new("default", 1, false, false, 1)
     worker.work
+    sleep(2)
     assert_equal(1, worker.failed_count)
+    worker.shutdown
   end
 
   def test_work_with_no_args
     QC.enqueue("TestObject.no_args")
     worker = TestWorker.new("default", 1, false, false, 1)
-    r = worker.work
-    assert_nil(r)
+    worker.work
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_work_with_one_arg
     QC.enqueue("TestObject.one_arg", "1")
     worker = TestWorker.new("default", 1, false, false, 1)
-    r = worker.work
-    assert_equal("1", r)
+    worker.work
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_work_with_two_args
     QC.enqueue("TestObject.two_args", "1", 2)
     worker = TestWorker.new("default", 1, false, false, 1)
-    r = worker.work
-    assert_equal(["1", 2], r)
+    worker.work
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_work_custom_queue
     p_queue = QC::Queue.new("priority_queue")
     p_queue.enqueue("TestObject.two_args", "1", 2)
     worker = TestWorker.new("priority_queue", 1, false, false, 1)
-    r = worker.work
-    assert_equal(["1", 2], r)
+    worker.work
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_worker_listens_on_chan
     p_queue = QC::Queue.new("priority_queue")
     p_queue.enqueue("TestObject.two_args", "1", 2)
     worker = TestWorker.new("priority_queue", 1, false, true, 1)
-    r = worker.work
-    assert_equal(["1", 2], r)
+    worker.work
     assert_equal(0, worker.failed_count)
+    worker.shutdown
   end
 
   def test_worker_ueses_one_conn
@@ -93,6 +101,7 @@ class WorkerTest < QCTest
       QC::Conn.execute("SELECT count(*) from pg_stat_activity")["count"].to_i,
       "Multiple connections -- Are there other connections in other terminals?"
     )
+    worker.shutdown
   end
 
 end
