@@ -1,3 +1,5 @@
+require 'pg'
+
 module QC
   module Conn
     extend self

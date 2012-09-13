@@ -1,5 +1,4 @@
 require "scrolls"
-require "pg"
 require "uri"
 
 $: << File.expand_path(__FILE__, "lib")
