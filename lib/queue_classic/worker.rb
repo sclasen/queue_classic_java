@@ -113,7 +113,7 @@ module QC
     end
 
     def work
-      @semaphore.acquire
+      @semaphore.acquire # reserve a thread
       if job = lock_job
         @pool.submit do
           QC.log_yield(:level => :info, :action => "work_job", :job => job[:id]) do
@@ -128,6 +128,8 @@ module QC
             end
           end
         end
+      else
+        @semaphore.release
       end
     end
 
