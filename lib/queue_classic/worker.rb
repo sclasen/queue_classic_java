@@ -42,7 +42,6 @@ module QC
       @max_attempts = max_attempts
 
       ################## executor stuff
-      thread_pool_size=10
       @semaphore = java.util.concurrent.Semaphore.new(thread_pool_size)
       @pool = Executor.new(thread_pool_size, thread_pool_size, 0, java.util.concurrent.TimeUnit::MILLISECONDS, java.util.concurrent.LinkedBlockingQueue.new, @semaphore)
       #######################
@@ -58,6 +57,10 @@ module QC
         :listening_worker => listening_worker,
         :max_attempts => max_attempts
       )
+    end
+
+    def thread_pool_size
+      10
     end
 
     def shutdown
