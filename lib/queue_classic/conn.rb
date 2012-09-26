@@ -4,7 +4,6 @@ require 'cgi'
 module QC
   module Conn
     extend self
-    #include_package "org.postgresql"
 
     def run_prepared_statement(statement)
       statement.execute

@@ -1,5 +1,4 @@
 module QC
-
   class Executor < java.util.concurrent.ThreadPoolExecutor
     def initialize(a,b,c,d,e, semaphore)
       super(a,b,c,d,e)
@@ -41,10 +40,8 @@ module QC
       @listening_worker = listening_worker
       @max_attempts = max_attempts
 
-      ################## executor stuff
       @semaphore = java.util.concurrent.Semaphore.new(thread_pool_size)
       @pool = Executor.new(thread_pool_size, thread_pool_size, 0, java.util.concurrent.TimeUnit::MILLISECONDS, java.util.concurrent.LinkedBlockingQueue.new, @semaphore)
-      #######################
 
       handle_signals
 
@@ -126,6 +123,8 @@ module QC
               log(:level => :debug, :action => "failed_work", :job => job[:id], :error => e.inspect)
               handle_failure(job, e)
             ensure
+              # Threads in the pool use the same connection as the 'listener' thread for deleting the job,
+              # but this is OK since jdbc-postgres is threadsafe
               @queue.delete(job[:id])
               log(:level => :debug, :action => "delete_job", :job => job[:id])
             end
