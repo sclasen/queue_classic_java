@@ -14,6 +14,8 @@ module QC
       params.each_with_index do |p,i|
         if p.is_a? Fixnum
           pstment.setInt(i+1, p)
+        elsif p.is_a? Time
+          pstment.setTimestamp(i+1, java.sql.Timestamp.new((p.to_f * 1000).to_i)) 
         else
           pstment.setString(i+1, p)
         end
